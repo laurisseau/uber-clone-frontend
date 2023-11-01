@@ -12,12 +12,15 @@ mapboxgl.accessToken =
 
 const PriceScreen: React.FC = () => {
   const { state } = useContext(Context);
-  const [uberRequest, setUberRequest] = useState<any>({});
-  const cost: number = uberRequest?.cost / 100;
-  const duration: string = uberRequest?.duration;
   const { userInfo } = state;
   const params = useParams();
   const { id } = params;
+
+  const [uberRequest, setUberRequest] = useState<any>({});
+  const [token, setToken] = useState<String | undefined>('');
+  const cost: number | undefined = uberRequest?.payment?.amount / 100;
+  const amount: number | undefined = uberRequest?.payment?.amount;
+  const duration: string = uberRequest?.duration;
 
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -29,7 +32,7 @@ const PriceScreen: React.FC = () => {
   useEffect(() => {
     const getUberRequest = async () => {
       try {
-        const token = userInfo?.token;
+        setToken(userInfo?.token);
         if (id && token) {
           const { data } = await axios.get(`/api/user/uberRequest/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -54,7 +57,7 @@ const PriceScreen: React.FC = () => {
       }
     };
     getUberRequest();
-  }, [id, userInfo?.token]);
+  }, [id, token, userInfo?.token]);
 
   useEffect(() => {
     if (mapContainer.current && lng && lat) {
@@ -84,13 +87,50 @@ const PriceScreen: React.FC = () => {
     }
   }, [lng, lat, zoom, markers]);
 
-  const paymentHandler = (e: React.FormEvent) => {
+  const paymentHandler = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log(`payment of ${cost}`)
+    try {
+      const { data } = await axios.post(
+        'http://localhost:8080/api/payment/create-payment-intent',
+        {
+          amount,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-  }
+      if (data) {
+        const clientSecret = data.clientSecret;
+        updateUberRequest(clientSecret);
+      }
+    } catch (err: any) {
+      console.log(err);
+      console.log(err.response);
+      // setLoading(false);
+    }
+  };
 
+  const updateUberRequest = async (clientSecret: string) => {
+    try {
+      const { data } = await axios.put(
+        `http://localhost:8080/api/user/uberRequest/${id}`,
+        {
+          payment: { clientSecret },
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (data) {
+        window.location.href = `/payment/${id}`;
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <div>
@@ -120,7 +160,12 @@ const PriceScreen: React.FC = () => {
           bg="light"
           fixed="bottom"
         >
-          <Button onClick={paymentHandler} variant="dark" className="mb-4 w-50" size="lg">
+          <Button
+            onClick={paymentHandler}
+            variant="dark"
+            className="mb-4 w-50"
+            size="lg"
+          >
             Confirm UberX
           </Button>
         </Navbar>

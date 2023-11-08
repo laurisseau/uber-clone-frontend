@@ -5,7 +5,7 @@ import { Context } from '../Provider';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-const LoginScreen: React.FC = () => {
+const DriverLoginScreen: React.FC = () => {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const { state, dispatch: ctxDispatch } = useContext(Context);
@@ -14,7 +14,7 @@ const LoginScreen: React.FC = () => {
   const submitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post('http://localhost:8080/api/auth/user/login', {
+      const { data } = await axios.post('/api/auth/driver/login', {
         username,
         password,
       });
@@ -22,10 +22,10 @@ const LoginScreen: React.FC = () => {
       if (data) {
         ctxDispatch({ type: 'USER_SIGNIN', payload: data });
         localStorage.setItem('userInfo', JSON.stringify(data));
-        window.location.href = '/';
+        window.location.href = '/driverhome';
       }
     } catch (err: any) {
-      console.log(err);
+      console.log(err.response.data);
     }
   };
 
@@ -44,13 +44,13 @@ const LoginScreen: React.FC = () => {
       >
         <div style={{ width: '350px' }}>
           <h1 className="mb-4" style={{ fontWeight: '400' }}>
-            Login to request a ride.
+            Login to start driving.
           </h1>
           <Form onSubmit={submitHandler}>
-            <Form.Group className="mb-4" controlId="username">
+            <Form.Group className="mb-4" controlId="email">
               <Form.Control
-                type="username"
-                placeholder="Enter your username"
+                type="email"
+                placeholder="Enter your email"
                 className="address-form-height"
                 value={username}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -82,7 +82,8 @@ const LoginScreen: React.FC = () => {
 
             <div className="text-center">
               <p>
-                Not a member? <Link to="/SignupOptions/Signup">Register</Link>
+                Not a member?{' '}
+                <Link to="/SignupOptions/Driver/Signup">Register</Link>
               </p>
             </div>
           </Form>
@@ -92,4 +93,4 @@ const LoginScreen: React.FC = () => {
   );
 };
 
-export default LoginScreen;
+export default DriverLoginScreen;

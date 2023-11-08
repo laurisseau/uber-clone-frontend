@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import axios from 'axios';
 import { useStripe, useElements } from '@stripe/react-stripe-js';
 import { PaymentElement } from '@stripe/react-stripe-js';
 import Button from 'react-bootstrap/Button';
 import { useParams } from 'react-router-dom';
+import { Context } from '../Provider';
 
 const PaymentForm: React.FC = () => {
   const params = useParams();
   const { id } = params;
+  const { state } = useContext(Context);
+  const { userInfo } = state;
 
   const [isProcessing, setIsProcessing] = useState(false);
   const stripe = useStripe();
@@ -32,8 +35,22 @@ const PaymentForm: React.FC = () => {
 
     if (error) {
       console.log(error);
+      alert('Payment failed');
     } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-      console.log('good');
+      try {
+        const { data } = await axios.get(
+          `http://localhost:8080/api/payment/paidUberRequest/${id}`,
+          {
+            headers: { Authorization: `Bearer ${userInfo?.token}` },
+          }
+        );
+
+        if (data) {
+          window.location.href = `/uberRequest/${id}`;
+        }
+      } catch (err) {
+        console.log(err);
+      }
     }
     setIsProcessing(false);
   };

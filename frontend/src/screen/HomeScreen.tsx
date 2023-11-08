@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useContext, useState } from 'react';
+import React, { ChangeEvent, useContext, useEffect, useState } from 'react';
 import NavbarComp from '../components/NavbarComp';
 import { Container, Form } from 'react-bootstrap';
 import axios, { AxiosResponse } from 'axios';
@@ -11,12 +11,12 @@ interface Address {
 }
 
 type Leg = {
-  // Define the properties for the 'legs' object
-  // Add the necessary properties here based on your actual data structure
   distance: { text: String };
   duration: { text: String };
   start_location: { lat: number; lng: number };
   end_location: { lat: number; lng: number };
+  start_address: String;
+  end_address: String;
 };
 
 const HomeScreen: React.FC = () => {
@@ -33,6 +33,12 @@ const HomeScreen: React.FC = () => {
   const [destinationSuggestions, setDestinationSuggestions] = useState<
     Address[]
   >([]);
+
+  useEffect(() => {
+    if (userInfo?.role === 'DRIVER') {
+      window.location.href = '/driverhome';
+    }
+  }, [userInfo]);
 
   const getDirections = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,8 +65,17 @@ const HomeScreen: React.FC = () => {
         const duration = result.duration.text;
         const destination = result.end_location;
         const origin = result.start_location;
+        const originAddress = result.start_address;
+        const destinationAddress = result.end_address;
 
-        uberRequest(distance, duration, destination, origin);
+        uberRequest(
+          distance,
+          duration,
+          destination,
+          origin,
+          originAddress,
+          destinationAddress
+        );
       }
     } catch (error) {
       console.error('Error:', error);
@@ -71,7 +86,9 @@ const HomeScreen: React.FC = () => {
     distance: String,
     duration: String,
     destination: { lat: number; lng: number },
-    origin: { lat: number; lng: number }
+    origin: { lat: number; lng: number },
+    originAddress: String,
+    destinationAddress: String
   ) => {
     try {
       const username = userInfo?.username;
@@ -85,6 +102,8 @@ const HomeScreen: React.FC = () => {
         number,
         duration,
         distance,
+        originAddress,
+        destinationAddress,
       };
 
       const config = {

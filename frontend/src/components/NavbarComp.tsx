@@ -28,10 +28,10 @@ const NavbarComp: React.FC = () => {
           </Nav>
         ) : (
           <Nav className="mt-2 mb-2">
-            <Link to="/login" className="nav-button-not-active me-1">
+            <Link to="/LoginOptions" className="nav-button-not-active me-1">
               Log in
             </Link>
-            <Link to="/signup" className="nav-button-active">
+            <Link to="/SignupOptions" className="nav-button-active">
               Sign up
             </Link>
           </Nav>

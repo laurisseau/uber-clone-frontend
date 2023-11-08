@@ -103,7 +103,7 @@ const PriceScreen: React.FC = () => {
 
       if (data) {
         const clientSecret = data.clientSecret;
-        updateUberRequest(clientSecret);
+        updateUberRequestClientSecret(clientSecret);
       }
     } catch (err: any) {
       console.log(err);
@@ -112,10 +112,10 @@ const PriceScreen: React.FC = () => {
     }
   };
 
-  const updateUberRequest = async (clientSecret: string) => {
+  const updateUberRequestClientSecret = async (clientSecret: string) => {
     try {
       const { data } = await axios.put(
-        `http://localhost:8080/api/user/uberRequest/${id}`,
+        `http://localhost:8080/api/user/updateUberRequestClientSecret/${id}`,
         {
           payment: { clientSecret },
         },

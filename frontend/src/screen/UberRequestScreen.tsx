@@ -1,59 +1,27 @@
-import { useParams } from 'react-router-dom';
 import LoadingBox from '../components/LoadingBox';
 import { Container } from 'react-bootstrap';
-import axios from 'axios';
-import { useContext, useEffect } from 'react';
-import { Context } from '../Provider';
-import SockJS from 'sockjs-client';
-import Stomp from 'stompjs';
+import { Client } from '@stomp/stompjs';
 
 const UberRequestScreen: React.FC = () => {
-  const { state } = useContext(Context);
-  const { userInfo } = state;
-  const params = useParams();
-  const { id } = params;
-
-  /*
-  useEffect(() => {
-    const getUberRequest = async () => {
-      try {
-        const { data } = await axios.get(
-          `http://localhost:8080/api/user/uberRequest/${id}`,
-          { headers: { Authorization: `Bearer ${userInfo?.token}` } }
-        );
-
-        if (data) {
-          if (data.accepted) {
-            window.location.href = '/userAccepted';
-          }
+  const client = new Client({
+    brokerURL: 'ws://localhost:8080/ws',
+    onConnect: () => {
+      client.subscribe('/topic/acceptUberRequest', (message) => {
+        const updatedUberRequest = JSON.parse(message.body);
+        if (updatedUberRequest.accepted) {
+          window.location.href = '/userAccepted';
         }
-      } catch (err) {}
-    };
-    getUberRequest();
-  },[id, userInfo?.token]);
-*/
+      });
+    },
+    onDisconnect: () => {
+      //console.log('Disconnected from the WebSocket');
+    },
+    onStompError: (error) => {
+      //console.error('WebSocket error:', error);
+    },
+  });
 
-  //useEffect(() => {
-    const sock = new SockJS('http://127.0.0.1:8080/ws');
-    sock.onopen = function () {
-      console.log('WebSocket connection established.');
-    };
-    sock.onclose = function (event) {
-      console.log('WebSocket connection closed:', event);
-    };
-    sock.onerror = function (error) {
-      console.error('WebSocket error:', error);
-    };
-  /*
-    var client = Stomp.over(socket);
-
-    client.connect({}, function (frame) {
-      console.log('Connected: ' + frame);
-    }, function (error) {
-      console.error('STOMP error: ' + error);
-    });
-    */
-  //}, []);
+  client.activate();
 
   return (
     <Container>

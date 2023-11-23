@@ -3,6 +3,7 @@ import NavbarComp from '../components/NavbarComp';
 import { Context } from '../Provider';
 import { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
+import { Client } from '@stomp/stompjs';
 
 interface UberRequest {
   duration: string;
@@ -28,6 +29,7 @@ const DriverHomeScreen: React.FC = () => {
   const { userInfo } = state;
   const [token, setToken] = useState<string>('');
   const [username, setUsername] = useState<string>('');
+  const [reload, setReload] = useState<boolean>(false);
 
   useEffect(() => {
     if (userInfo) {
@@ -50,7 +52,6 @@ const DriverHomeScreen: React.FC = () => {
           const { data } = await axios.get(
             `api/permitAll/getCurrentLocation/lat=${position.coords.latitude}&lng=${position.coords.longitude}`
           );
-          //console.log(data.results)
           setCurrentLocation(data.results[0].formatted_address);
         } catch (err) {
           console.error('Error fetching current location from API:', err);
@@ -117,6 +118,7 @@ const DriverHomeScreen: React.FC = () => {
               })
             );
             setAllPaidUberRequest(updatedUberRequests);
+            setReload(false);
           }
         } catch (error) {
           console.error('Error:', error);
@@ -124,8 +126,32 @@ const DriverHomeScreen: React.FC = () => {
       }
     };
     getAllPaidUberRequest();
-  }, [currentLocation, token, userInfo, userInfo?.token, userInfo?.username]);
+  }, [
+    reload,
+    currentLocation,
+    token,
+    userInfo,
+    userInfo?.token,
+    userInfo?.username,
+  ]);
 
+  const client = new Client({
+    brokerURL: 'ws://localhost:8080/ws',
+    onConnect: () => {
+      client.subscribe('/topic/paidUberRequest', async (message) => {
+        setReload(true);
+      });
+    },
+    onDisconnect: () => {
+      //console.log('Disconnected from the WebSocket');
+    },
+    onStompError: (error) => {
+      //console.error('WebSocket error:', error);
+    },
+  });
+
+  client.activate();
+  //-----------------
   const acceptUberRequest = async (id: number) => {
     try {
       const { data } = await axios.put(

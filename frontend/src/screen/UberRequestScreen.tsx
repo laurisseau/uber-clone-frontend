@@ -1,15 +1,18 @@
 import LoadingBox from '../components/LoadingBox';
 import { Container } from 'react-bootstrap';
 import { Client } from '@stomp/stompjs';
+import { useParams } from 'react-router-dom';
 
 const UberRequestScreen: React.FC = () => {
+  const params = useParams();
+  const { id } = params;
   const client = new Client({
     brokerURL: 'ws://localhost:8080/ws',
     onConnect: () => {
       client.subscribe('/topic/acceptUberRequest', (message) => {
         const updatedUberRequest = JSON.parse(message.body);
         if (updatedUberRequest.accepted) {
-          window.location.href = '/userAccepted';
+          window.location.href = `/userAccepted/${id}`;
         }
       });
     },

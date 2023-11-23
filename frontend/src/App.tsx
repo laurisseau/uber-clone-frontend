@@ -36,7 +36,7 @@ function App() {
             element={<DriverLoginScreen />}
           />
           <Route path="/DriverHome" element={<DriverHomeScreen />} />
-          <Route path="/userAccepted" element={<UserAcceptedScreen />} />
+          <Route path="/userAccepted/:id" element={<UserAcceptedScreen />} />
           <Route path="/acceptedUberRequest" element={<AcceptedUberRequestScreen />} />
 
         </Routes>
